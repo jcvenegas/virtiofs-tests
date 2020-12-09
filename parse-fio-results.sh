@@ -1,7 +1,17 @@
 #!/bin/bash
 
 # Job Name, Workload, Bandwidth, IOPS
-PRINT_FORMAT="%-24s%-24s%-16s%-16s\n"
+REPORT_FORMAT="${REPORT_FORMAT:-txt}"
+if [[ "${REPORT_FORMAT}" == "csv" ]];then
+   PRINT_FORMAT="%s,%s,%s,%s\n"
+ else
+   PRINT_FORMAT="%-40s%-24s%-16s%-16s\n"
+fi
+if [[ "${REPORT_FORMAT}" == "csv" ]];then
+  MIXED_SEPARATOR=","
+else
+  MIXED_SEPARATOR="/"
+fi
 
 get_total() {
   local data="$1"
@@ -76,7 +86,10 @@ get_op_bw_with_suffix() {
   local op=$1 file=$2 write=$3
   local unit data avg bw
 
-  unit="kb"
+  unit=""
+  if [[ "${REPORT_FORMAT}" != "csv" ]];then
+     unit="kb"
+  fi
   data=`get_op_bw $op $file $write`
 
   if [ -z "$data" ];then
@@ -84,7 +97,7 @@ get_op_bw_with_suffix() {
     bw="$avg"
   else
     avg=`get_avg "$data"`
-    if [ $avg -gt 10240 ]; then
+    if [ $avg -gt 10240 ] && [[ "${REPORT_FORMAT}" != "csv" ]]; then
       avg=`div_by_kib $avg`
       unit="mb"
     fi
@@ -107,7 +120,7 @@ get_op_bw_formatted() {
   fi
 
   if [ "$mixed" == "1" ]; then
-    echo "$rbw/$wbw"
+    echo "${rbw}${MIXED_SEPARATOR}${wbw}"
   elif [ -n "$rbw" ]; then
     echo "$rbw"
   else
@@ -120,12 +133,13 @@ get_op_iops_with_suffix() {
       local unit data avg iops
 
       unit=""
+
       data=`get_op_iops $op $file $write`
       if [ -z "$data" ];then
         avg="Unknown"
       else
         avg=`get_avg "$data"`
-        if [ $avg -gt 10240 ]; then
+        if [ $avg -gt 10240 ] && [[ "${REPORT_FORMAT}" != "csv" ]]; then
           avg=`div_by_kib $avg`
           unit="k"
         fi
@@ -149,7 +163,7 @@ get_op_iops_formatted() {
   fi
 
   if [ "$mixed" == "1" ]; then
-    echo "$riops/$wiops"
+    echo "${riops}${MIXED_SEPARATOR}${wiops}"
   elif [ -n "$riops" ]; then
     echo "$riops"
   else
@@ -160,8 +174,8 @@ get_op_iops_formatted() {
 print_result_header() {
   local name="NAME"
   local op="WORKLOAD"
-  local bw="Bandwidth"
-  local iops="IOPS"
+  local bw="bw_r${MIXED_SEPARATOR}bw_w"
+  local iops="IOPS_r${MIXED_SEPARATOR}IOPS_w"
 
   printf $PRINT_FORMAT "$name" "$op" "$bw" "$iops"
 }
@@ -203,6 +217,6 @@ RW_OPERATIONS="randrw-psync randrw-psync-multi randrw-mmap randrw-mmap-multi ran
 
 # Parse and print numbers
 print_result_header
-parse_print_ops "$READ_OPERATIONS"
-parse_print_ops "$WRITE_OPERATIONS" "1"
+parse_print_ops "$READ_OPERATIONS" "0" "1"
+parse_print_ops "$WRITE_OPERATIONS" "0" "1"
 parse_print_ops "$RW_OPERATIONS" "0" "1"
