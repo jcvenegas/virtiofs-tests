@@ -10,6 +10,9 @@ SIZE="8G"
 DIRECT=0
 BLOCKSIZE="4K"
 
+CONTAINER_RUNTIME="${CONTAINER_RUNTIME:-none}"
+image_name="fio-container-metrics"
+
 drop_cache() {
   sync
   echo 3 > /proc/sys/vm/drop_caches
@@ -42,11 +45,23 @@ run_test() {
   local fio_cmd
 
   [ -n "$CREATEFILE" ] && empty_testdir
+  if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
+    docker rm -f "${image_name}"
+    docker run -dti --runtime "${CONTAINER_RUNTIME}"  --name "${image_name}" "${image_name}"
+  fi
   drop_cache
 
   fio_cmd="fio --directory=$TESTDIR --runtime=$RUNTIME --iodepth=$IODEPTH --size="$SIZE" --direct=$DIRECT --blocksize="$BLOCKSIZE" --append-terse $1"
-  echo "Running: $fio_cmd"
-  $fio_cmd
+  exec_cmd "${fio_cmd}"
+}
+
+exec_cmd(){
+  local cmd
+  cmd="$1"
+  if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
+    cmd="docker exec -i ${image_name} ${cmd}"
+  fi
+  ${cmd}
 }
 
 usage() {
