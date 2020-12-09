@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+script_dir=$(dirname "$(readlink -f "$0")")
+
 # Defaults
 # default runtime is 20 seconds
 RUNTIME=20
@@ -52,7 +55,7 @@ run_test() {
   fi
   drop_cache
 
-  fio_cmd="fio --directory=$TESTDIR --runtime=$RUNTIME --iodepth=$IODEPTH --size="$SIZE" --direct=$DIRECT --blocksize="$BLOCKSIZE" --append-terse $1"
+  fio_cmd="fio --directory=$TESTDIR --runtime=$RUNTIME --iodepth=$IODEPTH --size="$SIZE" --direct=$DIRECT --blocksize=$BLOCKSIZE --append-terse $1"
   exec_cmd "${fio_cmd}"
 }
 
@@ -62,7 +65,15 @@ exec_cmd(){
   if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
     cmd="docker exec -i ${image_name} ${cmd}"
   fi
+  echo "Running: $cmd"
   ${cmd}
+}
+
+build_fio_container(){
+  (
+    cd "${script_dir}/fio-jobs"
+    docker build -t "${image_name}" .
+  )
 }
 
 usage() {
@@ -142,6 +153,10 @@ if [ -z "$JOB_FILES" ];then
 fi
 
 output_meta_info
+if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
+  build_fio_container
+fi
+
 drop_cache
 for jobname in $JOB_FILES;do
   for i in `seq 1 $LOOPS`;do
