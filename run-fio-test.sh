@@ -38,6 +38,7 @@ output_meta_info() {
   echo "MOUNTPOINT=`findmnt -n --target $TESTDIR`"
   echo "VIRTO_SHM_REGIONS=`get_shm_regions`"
   echo "RUNTIME=$RUNTIME LOOPS=$LOOPS IODEPTH=$IODEPTH SIZE=$SIZE DIRECT=$DIRECT BLOCKSIZE=$BLOCKSIZE"
+  echo "CONTAINER_RUNTIME=${CONTAINER_RUNTIME}"
   echo ""
 }
 
