@@ -47,12 +47,17 @@ output_meta_info() {
 
 run_test() {
   local fio_cmd
+  local docker_cmd
 
   [ -n "$CREATEFILE" ] && empty_testdir
+
   if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
     docker rm -f "${image_name}"
-    docker run -dti --runtime "${CONTAINER_RUNTIME}"  --name "${image_name}" "${image_name}"
+    docker_cmd="docker run -dti --runtime ${CONTAINER_RUNTIME}  --name ${image_name} ${image_name}"
+    echo "Running: ${docker_cmd}"
+    ${docker_cmd}
   fi
+
   drop_cache
 
   fio_cmd="fio --directory=$TESTDIR --runtime=$RUNTIME --iodepth=$IODEPTH --size="$SIZE" --direct=$DIRECT --blocksize=$BLOCKSIZE --append-terse $1"
