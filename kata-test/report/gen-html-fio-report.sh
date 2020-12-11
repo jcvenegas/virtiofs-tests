@@ -31,4 +31,10 @@ sudo docker run -ti --rm -e JUPYTER_ENABLE_LAB=yes \
 				-v "${script_dir}:/home/jovyan" \
 				-v "${results_dir}:/home/jovyan/results" \
 				jupyter/scipy-notebook:399cbb986c6b \
-				bash  -c 'cd results; jupyter nbconvert --execute /home/jovyan/fio.ipynb --to html; cp /home/jovyan/fio.html /home/jovyan/results'
+				bash  -c '
+				cd results;
+				jupyter nbconvert --execute /home/jovyan/fio.ipynb --to html;
+				cp /home/jovyan/fio.html /home/jovyan/results;
+				jupyter nbconvert --execute /home/jovyan/iotop.ipynb --to html;
+				cp /home/jovyan/iotop.html /home/jovyan/results;
+				'
