@@ -5,6 +5,6 @@ get_qemu_repo(){
 }
 
 get_qemu_version(){
-	local qemu_virtiofs_tag="killpriv-thread-pool"
+	local qemu_virtiofs_tag="dax-killpriv-thread-pool"
 	echo "${qemu_virtiofs_tag}"
 }
