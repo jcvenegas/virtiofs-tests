@@ -27,9 +27,9 @@ kata_env(){
 	local kata_env_bk
 	local kata_config_bk
 	local qemu_applied_patches
-	kata_env_bk="$(get_results_dir ${runtime} "${suffix}")/kata-env.toml"
-	kata_config_bk="$(get_results_dir ${runtime} "${suffix}")/kata-config.toml"
-	qemu_applied_patches="$(get_results_dir ${runtime} "${suffix}")/qemu-patches"
+	kata_env_bk="$(get_results_dir "${suffix}")/kata-env.toml"
+	kata_config_bk="$(get_results_dir "${suffix}")/kata-config.toml"
+	qemu_applied_patches="$(get_results_dir "${suffix}")/qemu-patches"
 
 	/opt/kata/bin/${runtime} kata-env > "${kata_env_bk}"
 	config_path="$(/opt/kata/bin/${runtime} kata-env --json | jq .Runtime.Config.Path -r)"
@@ -38,14 +38,34 @@ kata_env(){
 }
 
 get_results_dir(){
-	local runtime
 	local test_name
 	local test_result_dir
-	runtime="${1}"
-	test_name="${2}"
-	test_result_dir="${results_dir}/${runtime}-${test_name}"
+	test_name="${1}"
+	test_result_dir="${results_dir}/${test_name}"
 	mkdir -p "${test_result_dir}"
 	echo "${test_result_dir}"
+}
+
+collect_qemu_virtiofs_cmd(){
+	local rdir
+	local test_name
+	test_name="${1}"
+
+	rdir=$(get_results_dir "${test_name}")
+	sudo docker rm -f kata-info || true
+	sudo docker run --name kata-info --runtime "${runtime}" -dti busybox sh
+	ps aux| grep virtiofsd > "${rdir}/virtiofsd_cmd"
+	ps aux| grep qemu > "${rdir}/qemu_cmd"
+	sudo docker rm -f kata-info
+}
+
+collect_docker_info(){
+	local rdir
+	local test_name
+	test_name="${1}"
+
+	rdir=$(get_results_dir "${test_name}")
+	sudo docker info > "${rdir}/docker_info"
 }
 
 run_workload(){
@@ -57,10 +77,13 @@ run_workload(){
 	runtime="${1}"
 	test_name="${2}"
 
-	test_result_file="$(get_results_dir ${runtime} "${test_name}")/test-out.txt"
-	iotop_csv="$(get_results_dir ${runtime} "${test_name}")/iotop.csv"
+	test_result_file="$(get_results_dir "${test_name}")/test-out.txt"
+	iotop_csv="$(get_results_dir "${test_name}")/iotop.csv"
 
 	echo "case: ${runtime} ${test_name}"
+	collect_qemu_virtiofs_cmd "$test_name"
+	collect_docker_info "$test_name"
+
 	export CONTAINER_RUNTIME="${runtime}"
 	"${script_dir}/iotop_collect.sh" "${iotop_csv}" &
 	iotop_pid=$!
@@ -68,7 +91,7 @@ run_workload(){
 	cd "${script_dir}/.."
 	sudo -E ${script_dir}/../run-fio-test.sh --size 100M --direct 0  --loops 1 "${test_name}" . fio-jobs/*.job | tee "${test_result_file}"
 	)
-	kill -9 "${iotop_pid}"
+	sudo kill -9 "${iotop_pid}"
 }
 
 virtiofs_tread_pool_0(){

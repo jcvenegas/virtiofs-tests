@@ -1,24 +1,14 @@
 import pandas as pd
-
-def load_from_colab_form():
-    from google.colab import files
-    uploaded = files.upload()
-
-    for fn in uploaded.keys():
-      print('User uploaded file "{name}" with length {length} bytes'.format(
-      name=fn, length=len(uploaded[fn])))
+import os
+import re
+import io
+from IPython.display import display, Markdown
     
-    if not results_file in uploaded:
-       raise Exception("Not found results file")
-    
-def check_results_file(results_file):
-    if 'google.colab' in str(get_ipython()):
-      print('Running on CoLab')
-      load_from_colab_form()
-    else:
-      from os import path
-      if not path.exists(results_file):
-        raise Exception("Not found results file")
+def check_results_dir():
+    print_tests_info()
+    csv_file="./results/results.csv"
+    if not os.path.exists(csv_file):
+        raise Exception("Not found results file:"+csv_file)
 
 # Given df return new_df
 # Where new_df is defined by 
@@ -59,9 +49,52 @@ def plot_df(df, names,sort_key=""):
     df.sort_values(sort_key, ascending=False)
   df.plot(kind='bar',x="WORKLOAD",y=names,  figsize=(30, 10))
 
-def import_data_from_csv(results_file):
+def import_data_from_csv():
+    results_file="./results/results.csv"
     return pd.read_csv(results_file)
 
 def show_df(df):
     pd.set_option('display.max_rows', df.shape[0]+1)
     return df
+
+def print_qemu_cmd(cmd_file):
+    q_cmd = open(cmd_file, 'r') 
+    lines = q_cmd.readlines()
+    for line in lines:
+        if "system-x86_64" in line:
+            q=re.split('\s+', line)
+            q=q[10:]
+            q=' '.join(q)
+            q=re.sub("/run.*?,", "...", q)
+            display(Markdown('*Qemu:*'))
+            display(Markdown('```'+q+'```'))
+            
+def print_virtiofsd_cmd(cmd_file):
+    q_cmd = open(cmd_file, 'r') 
+    lines = q_cmd.readlines()
+    for line in lines:
+        if not "grep" in line:
+            q=re.split('\s+', line)
+            q=q[10:]
+            q=' '.join(q)
+            q=re.sub("/run.*?,", "...", q)
+            display(Markdown('*virtiofsd:*'))
+            display(Markdown('```'+q+'```'))
+
+def print_docker_info(docker_info):
+    info = open(docker_info, 'r') 
+    lines = info.readlines()
+    for line in lines:
+        if  "Storage" in line:
+            display(Markdown('*docker storage info*'))
+            print(line)
+            
+
+def print_tests_info():
+    subdirs = [f.path for f in os.scandir("./results") if f.is_dir()]
+    print("Results")
+    for r in subdirs:
+        print(r)
+        print_qemu_cmd(r+"/qemu_cmd")
+        print_virtiofsd_cmd(r+"/virtiofsd_cmd")
+        print_docker_info(r+"/docker_info")
