@@ -44,6 +44,15 @@ default_qemu(){
 	${script_dir}/run_kata_fio.sh | tee log-qemu-default
 }
 
+build_and_install_kernel(){
+	(
+	cd ${script_dir}/kernel/
+	sudo make
+	sudo make install
+	)
+}
+
+build_and_install_kernel
 qemu_rh_static
 #qemu_rh_dyn
 #default_qemu
