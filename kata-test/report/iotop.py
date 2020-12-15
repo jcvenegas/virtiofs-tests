@@ -28,9 +28,12 @@ def get_op_by_process(rdf,op):
             d[c] = val
             df = df.append(d,ignore_index=True)
     return df
+
 def plot_iotop_by_process(df):
     c=set(df.columns)
     c.remove("second")
     df.plot(x="second",y=c,  figsize=(30, 10))
     matplotlib.pyplot.show()
-    
+
+def import_data_from_csv(f):
+    return pandas.read_csv(f)
