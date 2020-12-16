@@ -226,6 +226,7 @@ runc_container(){
 }
 
 mkdir -p "${results_dir}"
+${script_dir}/env_info/lstopo/get-lstopo-svg.sh hwtopo.svg
 9pfs_mmap_msize_200000
 
 virtiofs_pool_0_auto
