@@ -94,22 +94,24 @@ run_workload(){
 	sudo kill -9 "${iotop_pid}"
 }
 
-virtiofs_tread_pool_0(){
+virtiofs_pool_0_auto_dax(){
 	local runtime="kata-qemu-virtiofs"
 	local suffix="$(fn_name)"
 
 	set_base_virtiofs_config
-	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"auto"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 1024
 	kata_env "${runtime}" "${suffix}"
 	run_workload "${runtime}" "${suffix}"
 }
 
-virtiofs_tread_pool_0_nodax_auto(){
+virtiofs_pool_0_auto(){
 	local runtime="kata-qemu-virtiofs"
 	local suffix="$(fn_name)"
 
 	set_base_virtiofs_config
-	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0","-o","no_posix_lock","-o","xattr"]'
 	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"auto"'
 	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 0
 
@@ -117,12 +119,27 @@ virtiofs_tread_pool_0_nodax_auto(){
 	run_workload "${runtime}" "${suffix}"
 }
 
-virtiofs_tread_pool_1(){
+virtiofs_pool_0_none(){
 	local runtime="kata-qemu-virtiofs"
 	local suffix="$(fn_name)"
 
 	set_base_virtiofs_config
-	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=1"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"none"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 0
+
+	kata_env "${runtime}" "${suffix}"
+	run_workload "${runtime}" "${suffix}"
+}
+
+virtiofs_pool_0_none_dax(){
+	local runtime="kata-qemu-virtiofs"
+	local suffix="$(fn_name)"
+
+	set_base_virtiofs_config
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=0","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"none"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 1024
 
 	kata_env "${runtime}" "${suffix}"
 	run_workload "${runtime}" "${suffix}"
@@ -134,6 +151,58 @@ virtiofs_tread_pool_64(){
 
 	set_base_virtiofs_config
 	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=64"]'
+
+	kata_env "${runtime}" "${suffix}"
+	run_workload "${runtime}" "${suffix}"
+}
+
+#### 64 threads
+virtiofs_pool_64_auto_dax(){
+	local runtime="kata-qemu-virtiofs"
+	local suffix="$(fn_name)"
+
+	set_base_virtiofs_config
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=64","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"auto"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 1024
+	kata_env "${runtime}" "${suffix}"
+	run_workload "${runtime}" "${suffix}"
+}
+
+virtiofs_pool_64_auto(){
+	local runtime="kata-qemu-virtiofs"
+	local suffix="$(fn_name)"
+
+	set_base_virtiofs_config
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=64","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"auto"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 0
+
+	kata_env "${runtime}" "${suffix}"
+	run_workload "${runtime}" "${suffix}"
+}
+
+virtiofs_pool_64_none(){
+	local runtime="kata-qemu-virtiofs"
+	local suffix="$(fn_name)"
+
+	set_base_virtiofs_config
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=64","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"none"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 0
+
+	kata_env "${runtime}" "${suffix}"
+	run_workload "${runtime}" "${suffix}"
+}
+
+virtiofs_pool_64_none_dax(){
+	local runtime="kata-qemu-virtiofs"
+	local suffix="$(fn_name)"
+
+	set_base_virtiofs_config
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_extra_args '["--thread-pool-size=64","-o","no_posix_lock","-o","xattr"]'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache '"none"'
+	sudo crudini --set --existing /opt/kata/share/defaults/kata-containers/configuration-qemu-virtiofs.toml hypervisor.qemu virtio_fs_cache_size 1024
 
 	kata_env "${runtime}" "${suffix}"
 	run_workload "${runtime}" "${suffix}"
@@ -158,8 +227,17 @@ runc_container(){
 
 mkdir -p "${results_dir}"
 9pfs_mmap_msize_200000
-virtiofs_tread_pool_0
-virtiofs_tread_pool_1
-virtiofs_tread_pool_64
-virtiofs_tread_pool_0_nodax_auto
+
+virtiofs_pool_0_auto
+virtiofs_pool_0_auto_dax
+
+virtiofs_pool_0_none
+virtiofs_pool_0_none_dax
+
+virtiofs_pool_64_auto
+virtiofs_pool_64_auto_dax
+
+virtiofs_pool_64_none
+virtiofs_pool_64_none_dax
+
 runc_container
