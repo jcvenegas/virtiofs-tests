@@ -62,6 +62,9 @@ run_test() {
 
   fio_cmd="fio --directory=$TESTDIR --runtime=$RUNTIME --iodepth=$IODEPTH --size="$SIZE" --direct=$DIRECT --blocksize=$BLOCKSIZE --append-terse $1"
   exec_cmd "${fio_cmd}"
+  if [[ "${CONTAINER_RUNTIME}" != "none" ]];then
+    docker rm -f "${image_name}"
+  fi
 }
 
 exec_cmd(){
