@@ -58,6 +58,9 @@ def show_df(df):
     return df
 
 def print_qemu_cmd(cmd_file):
+    if not os.path.exists(cmd_file):
+        return
+    
     q_cmd = open(cmd_file, 'r') 
     lines = q_cmd.readlines()
     for line in lines:
@@ -65,11 +68,15 @@ def print_qemu_cmd(cmd_file):
             q=re.split('\s+', line)
             q=q[10:]
             q=' '.join(q)
-            q=re.sub("/run.*?,", "...", q)
+            q=re.sub("/run.*?(,|\s)", "...", q)
             display(Markdown('*Qemu:*'))
-            display(Markdown('```'+q+'```'))
+            display(Markdown('<details><summary>show command</summary>'+'<br>'.join(q.split())+'</details>'))
+      
             
 def print_virtiofsd_cmd(cmd_file):
+    if not os.path.exists(cmd_file):
+        return
+    
     q_cmd = open(cmd_file, 'r') 
     lines = q_cmd.readlines()
     for line in lines:
@@ -79,9 +86,11 @@ def print_virtiofsd_cmd(cmd_file):
             q=' '.join(q)
             q=re.sub("/run.*?,", "...", q)
             display(Markdown('*virtiofsd:*'))
-            display(Markdown('```'+q+'```'))
+            display(Markdown('<details><summary>show command</summary>'+'<br>'.join(q.split())+'</details>'))
 
 def print_docker_info(docker_info):
+    if not os.path.exists(docker_info):
+        return
     info = open(docker_info, 'r') 
     lines = info.readlines()
     for line in lines:
@@ -89,6 +98,13 @@ def print_docker_info(docker_info):
             display(Markdown('*docker storage info*'))
             print(line)
             
+def print_test_config(docker_info):
+    info = open(docker_info, 'r') 
+    lines = info.readlines()
+    for line in lines:
+        if  "IODEPTH=" in line:
+            display(Markdown('*Test config*'))
+            print(line)
 
 def print_tests_info():
     subdirs = [f.path for f in os.scandir("./results") if f.is_dir()]
@@ -98,3 +114,4 @@ def print_tests_info():
         print_qemu_cmd(r+"/qemu_cmd")
         print_virtiofsd_cmd(r+"/virtiofsd_cmd")
         print_docker_info(r+"/docker_info")
+        print_test_config(r+"/test-out.txt")
